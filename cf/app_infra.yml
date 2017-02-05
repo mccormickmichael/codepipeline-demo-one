@@ -17,6 +17,9 @@ Outputs:
     Value: !Ref 'AWS::StackName'
     Export:
       Name: 'CodePipelineDemoAppInfraStack'
+  URL:
+    Description: 'URL of our application'
+    Value: !Sub '${WebServer.PublicDnsName}'
 
 Resources:
   WebServer:
