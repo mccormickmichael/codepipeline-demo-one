@@ -1,0 +1,28 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Sample CodePipeline Demo Standalone Code Deploy'
+
+Resources:
+  DemoApplication:
+    Type: 'AWS::CodeDeploy::Application'
+    
+  DemoDeploymentGroup:
+    Type: 'AWS::CodeDeploy::DeploymentGroup'
+    Properties:
+      ApplicationName: !Ref DemoApplication
+      Ec2TagFilters:
+        - Type: KEY_AND_VALUE
+          Key: DeploymentGroup
+          Value: CodePipelineDemoAppInfra
+      ServiceRoleArn: !Sub '${DemoIAMRole.Arn}'
+
+  
+  DemoIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument: >
+        {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"codedeploy.amazonaws.com"},"Action":"sts:AssumeRole"}}
+      Path: '/'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole'
