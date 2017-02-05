@@ -1,0 +1,72 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Sample CodePipeline Application Infrastructure'
+
+Parameters:
+  VPC:
+    Description: 'The VPC in which to run the webserver instance'
+    Type: 'AWS::EC2::VPC::Id'
+  Subnet:
+    Description: 'The subnet in the VPC in which to run the webserver instance'
+    Type: 'AWS::EC2::Subnet::Id'
+
+Outputs:
+  StackName:
+    Description: 'Name of the stack'
+    Value: !Ref 'AWS::StackName'
+    Export:
+      Name: 'CodePipelineDemoAppInfraStack'
+
+Resources:
+  WebServer:
+    Type: 'AWS::EC2::Instance'
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    Properties:
+      IamInstanceProfile: !Ref WebServerInstanceProfile
+      ImageId: 'ami-f173cc91'  # us-west-2 amazon linux
+      InstanceType: 't2.micro'
+      KeyName: 'bastion'
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      SubnetId: !Ref Subnet
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -x
+          yum update -y && yum install -y ruby wget && wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install && chmod +x ./install && ./install auto && service codedeploy-agent start
+          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource WebServer
+      Tags:
+        - Key: DeploymentGroup
+          Value: !Ref AWS::StackName
+        - Key: Name
+          Value: 'CodeDeploy Demo WebServer'
+          
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Static public webserver'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+          CidrIp: '0.0.0.0/0'
+
+  WebServerInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: '/'
+      Roles:
+        - !Ref WebServerIAMRole
+
+  WebServerIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument: >
+        {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}}
+      Path: '/'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy'

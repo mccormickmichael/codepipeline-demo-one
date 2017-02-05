@@ -1,0 +1,35 @@
+version: 0.1
+
+environment_variables:
+  plaintext:
+    BUILD: 'SNAPSHOT'
+
+phases:
+  install:
+    # Install additional SW not included in the docker image
+    commands:
+      - 'echo "Here I prepare my platform"'
+      - 'yum -y install zip'
+  pre_build:
+    # Prepare for executing the build. Maybe point to your artifactory, npm install, checkout more repos, etc.
+    commands:
+      - 'echo "Here I prepare my environment"'
+      - 'pip install pytest'
+      - 'mkdir -p build'
+  build:
+    # Compile, test, bundle, whatever produces deployable artifacts
+    commands:
+      - 'echo "Here I build and test things"'
+      - 'BUILD=${CODEBUILD_BUILD_ID} python make.py'
+      - 'echo ${CODEBUILD_BUILD_ID} > dist/manifest.txt'
+  post_build:
+    # package up your deployables, generate deploy scripts, etc.
+    commands:
+      - 'echo "Here I package stuff for distribution"'
+      - 'mkdir -p dist'
+      - 'zip -r dist/app.zip build'
+
+artifacts:
+  files:
+    - 'dist/*'
+  discard-paths: true
