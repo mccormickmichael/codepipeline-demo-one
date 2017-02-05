@@ -21,12 +21,12 @@ phases:
     commands:
       - 'echo "Here I build and test things"'
       - 'BUILD=${CODEBUILD_BUILD_ID} python make.py'
-      - 'echo ${CODEBUILD_BUILD_ID} > dist/manifest.txt'
   post_build:
     # package up your deployables, generate deploy scripts, etc.
     commands:
       - 'echo "Here I package stuff for distribution"'
       - 'mkdir -p dist'
+      - 'echo ${CODEBUILD_BUILD_ID} > dist/manifest.txt'
       - 'zip -r dist/app.zip build'
 
 artifacts:
