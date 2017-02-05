@@ -32,7 +32,6 @@ Resources:
       IamInstanceProfile: !Ref WebServerInstanceProfile
       ImageId: 'ami-f173cc91'  # us-west-2 amazon linux
       InstanceType: 't2.micro'
-      KeyName: 'bastion'
       SecurityGroupIds:
         - !Ref WebServerSecurityGroup
       SubnetId: !Ref Subnet

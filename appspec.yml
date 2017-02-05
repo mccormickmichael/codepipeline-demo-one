@@ -1,4 +1,4 @@
-version: 0.0 # TODO: verify latest version number
+version: 0.0
 os: linux
 files:
   - source: build/index.html
