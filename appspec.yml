@@ -1,0 +1,16 @@
+version: 0.0 # TODO: verify latest version number
+os: linux
+files:
+  - source: build/index.html
+    destination: /var/www/html
+
+hooks:
+  BeforeInstall:
+    - location: build/deploy/before_install.sh
+      timeout: 180
+  ApplicationStart:
+    - location: build/deploy/application_start.sh
+      timeout: 180
+  ValidateService:
+    - location: build/deploy/validate_service.sh
+      timeout: 180
