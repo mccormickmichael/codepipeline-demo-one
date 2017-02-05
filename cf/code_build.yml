@@ -33,9 +33,9 @@ Resources:
         # Either BUILD_ID or NONE
         NamespaceType: BUILD_ID
         # Post-fix path. Directory if Packaging is NONE, zip file name if Packaging is ZIP
-        Name: dist
+        Name: dist.zip
         # S3 only. ZIP or NONE
-        Packaging: NONE
+        Packaging: ZIP
       TimeoutInMinutes: 10
       Tags: []
   StandaloneCodeBuildRole:

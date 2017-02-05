@@ -9,7 +9,6 @@ phases:
     # Install additional SW not included in the docker image
     commands:
       - 'echo "Here I prepare my platform"'
-      - 'yum -y install zip'
   pre_build:
     # Prepare for executing the build. Maybe point to your artifactory, npm install, checkout more repos, etc.
     commands:
@@ -21,7 +20,7 @@ phases:
     commands:
       - 'echo "Here I build and test things"'
       - 'BUILD=${CODEBUILD_BUILD_ID} python make.py'
-      - 'echo "Here I create the deployment instructions"'
+      - 'echo "Here I create or copy deployment instructions"'
       - 'cp -r deploy build'
   post_build:
     # package up your deployables, generate deploy scripts, etc.
@@ -29,9 +28,10 @@ phases:
       - 'echo "Here I package stuff for distribution"'
       - 'mkdir -p dist'
       - 'echo ${CODEBUILD_BUILD_ID} > dist/manifest.txt'
-      - 'zip -r dist/app.zip build appspec.yml'
+      - 'cp appspec.yml dist'
+      - 'cp -r build dist'
 
 artifacts:
   files:
     - 'dist/*'
-  discard-paths: true
+  discard-paths: false
