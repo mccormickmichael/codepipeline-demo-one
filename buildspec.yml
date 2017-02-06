@@ -21,17 +21,17 @@ phases:
       - 'echo "Here I build and test things"'
       - 'BUILD=${CODEBUILD_BUILD_ID} python make.py'
       - 'echo "Here I create or copy deployment instructions"'
-      - 'cp -r deploy build'
   post_build:
     # package up your deployables, generate deploy scripts, etc.
     commands:
       - 'echo "Here I package stuff for distribution"'
       - 'mkdir -p dist'
       - 'echo ${CODEBUILD_BUILD_ID} > dist/manifest.txt'
-      - 'cp appspec.yml dist'
-      - 'cp -r build dist'
+      - 'cp -r build/* dist'
 
 artifacts:
   files:
     - 'dist/**/*'
+    - 'deploy/**/*'
+    - 'appspec.yml'
   discard-paths: false

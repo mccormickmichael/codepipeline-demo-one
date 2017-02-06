@@ -1,16 +1,16 @@
 version: 0.0
 os: linux
 files:
-  - source: build/index.html
+  - source: dist/index.html
     destination: /var/www/html
 
 hooks:
   BeforeInstall:
-    - location: build/deploy/before_install.sh
+    - location: deploy/before_install.sh
       timeout: 180
   ApplicationStart:
-    - location: build/deploy/application_start.sh
+    - location: deploy/application_start.sh
       timeout: 180
   ValidateService:
-    - location: build/deploy/validate_service.sh
+    - location: deploy/validate_service.sh
       timeout: 180
