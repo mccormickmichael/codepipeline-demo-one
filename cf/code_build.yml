@@ -26,7 +26,7 @@ Resources:
         Type: LINUX_CONTAINER
       Artifacts:
         Type: S3
-        Location: !ImportValue ThousandleavesArtifactBucket
+        Location: !ImportValue CodePipelineArtifactBucket
         # the next three properties determine where artifacts are placed in the bucket. Only valid for S3 type.
         # ${Path}/${NamespaceType}/${Name}
         Path: StandaloneCodeBuild

@@ -1,0 +1,17 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'S3 bucket definition for build artifacts'
+
+Resources:
+  BuildArtifactBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: thousandleaves-demo-codepipeline-artifacts
+
+Outputs:
+  BucketName:
+    Value: !Ref BuildArtifactBucket
+    Export:
+      Name: CodePipelineArtifactBucket
