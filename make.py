@@ -4,7 +4,7 @@ from string import Template
 
 substitutions = dict(
     WELCOME="Welcome!",
-    MESSAGE="Wow, stuff worked!",
+    MESSAGE="Is that really how it works?",
     BUILD=os.environ.get("BUILD", "SNAPSHOT"),
     THING=os.environ.get("THING", "NOTHING")
     )
