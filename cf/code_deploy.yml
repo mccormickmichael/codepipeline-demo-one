@@ -3,6 +3,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: 'Sample CodePipeline Demo Standalone Code Deploy'
 
+Parameters:
+  DeploymentGroupTagValue:
+    Type: 'String'
+    Description: 'Tag value of instances tagged with "DeploymentGroup" to be targeted'
+
 Resources:
   DemoApplication:
     Type: 'AWS::CodeDeploy::Application'
@@ -14,7 +19,7 @@ Resources:
       Ec2TagFilters:
         - Type: KEY_AND_VALUE
           Key: DeploymentGroup
-          Value: CodePipelineDemoAppInfra
+          Value: !Ref DeploymentGroupTagValue
       ServiceRoleArn: !Sub '${DemoIAMRole.Arn}'
 
   
