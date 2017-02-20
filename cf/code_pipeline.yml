@@ -1,0 +1,130 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'CodePipeline Demo'
+
+Parameters:
+  GitHubOAuthToken:
+    Type: String
+    NoEcho: True
+  DeploymentGroupTagValue:
+    Type: 'String'
+    Description: 'Tag value of instances tagged with "DeploymentGroup" to be targeted'
+
+Resources:
+  DemoPipeline:
+    Type: 'AWS::CodePipeline::Pipeline'
+    Properties:
+      ArtifactStore:
+        Location: !ImportValue CodePipelineArtifactBucket
+        Type: S3
+      RoleArn: !Sub '${DemoPipelineIAMRole.Arn}'
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version: 1
+              Configuration:
+                Owner: mccormickmichael
+                Repo: codepipeline-demo-one
+                Branch: master
+                OAuthToken: !Ref GitHubOAuthToken
+              OutputArtifacts:
+                - Name: SourceArtifact
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: !Ref DemoCodeBuild
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildProductArtifact
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: 1
+              Configuration:
+                ApplicationName: !Ref DemoApplication
+                DeploymentGroupName: !Ref DemoDeploymentGroup
+              InputArtifacts:
+                - Name: BuildProductArtifact
+              RunOrder: 1
+              
+  DemoPipelineIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument: >
+        {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"codepipeline.amazonaws.com"},"Action":"sts:AssumeRole"}}
+      ManagedPolicyArns:
+        - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/machine-deploy-s3'
+        - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
+        - 'arn:aws:iam::aws:policy/AWSCodeDeployFullAccess'
+
+# CodeBuild Stage
+  DemoCodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      Name: 'CodePipelineDemoCodeBuild'
+      Description: 'Code Pipeline CodeBuild project'
+      ServiceRole: !Ref CodeBuildRole
+      Source:
+        Type: CODEPIPELINE
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/eb-python-2.7-amazonlinux-64:2.1.6'
+        Type: LINUX_CONTAINER
+      TimeoutInMinutes: 10
+      Tags: []
+  CodeBuildRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument: >
+        {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"codebuild.amazonaws.com"},"Action":"sts:AssumeRole"}}
+      ManagedPolicyArns:
+        # These could(should?) be custom policies
+        - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
+        - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
+        - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/machine-deploy-s3'
+
+# CodeDeploy Stage
+  DemoApplication:
+    Type: 'AWS::CodeDeploy::Application'
+  DemoDeploymentGroup:
+    Type: 'AWS::CodeDeploy::DeploymentGroup'
+    Properties:
+      ApplicationName: !Ref DemoApplication
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
+      Ec2TagFilters:
+        - Type: KEY_AND_VALUE
+          Key: DeploymentGroup
+          Value: !Ref DeploymentGroupTagValue
+      ServiceRoleArn: !Sub '${DemoIAMRole.Arn}'
+  DemoIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument: >
+        {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"codedeploy.amazonaws.com"},"Action":"sts:AssumeRole"}}
+      Path: '/'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole'
+
+
+  # DemoLambdaTrigger: BLAH
+
