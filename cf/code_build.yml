@@ -47,4 +47,4 @@ Resources:
         # These could(should?) be custom policies
         - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
-        - !Join [ '', [ 'arn:aws:iam::', !Ref 'AWS::AccountId', ':policy/machine-deploy-s3' ] ]
+        - !ImportValue CodePipelineArtifactBucketDeployPolicy

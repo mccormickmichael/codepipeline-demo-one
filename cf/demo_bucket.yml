@@ -3,15 +3,42 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: 'S3 bucket definition for build artifacts'
 
+Parameters:
+  BucketName:
+    Type: String
+    Description: 'Name of the bucket to create'
+
 Resources:
   BuildArtifactBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
       AccessControl: Private
-      BucketName: thousandleaves-demo-codepipeline-artifacts
+      BucketName: !Ref BucketName
+
+  ArtifactBucketDeployPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      Description: 'Build artifact publishing policy'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:DeleteObject'
+              - 's3:GetObject'
+              - 's3:GetObjectAcl'
+              - 's3:PutObject'
+              - 's3:PutObjectAcl'
+            Resource:
+              - !Join ['', ['arn:aws:s3:::', !Ref BucketName, '/*'] ]
 
 Outputs:
   BucketName:
     Value: !Ref BuildArtifactBucket
     Export:
       Name: CodePipelineArtifactBucket
+  DeployPolicy:
+    Value: !Ref ArtifactBucketDeployPolicy
+    Export:
+      Name: CodePipelineArtifactBucketDeployPolicy

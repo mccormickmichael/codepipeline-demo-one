@@ -56,9 +56,9 @@ Resources:
                 - Name: SourceArtifact
               OutputArtifacts:
                 - Name: BuildProductArtifact
-        - Name: Deploy
+        - Name: DeployToTest
           Actions:
-            - Name: Deploy to Test
+            - Name: DeployToTest
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -81,9 +81,9 @@ Resources:
               Configuration:
                 NotificationArn: !Ref ApprovalNotificationArn
                 CustomData: 'Look at this!'
-        - Name: Deploy
+        - Name: DeployToProd
           Actions:
-            - Name: Deploy to Prod
+            - Name: DeployToProd
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -102,10 +102,10 @@ Resources:
       AssumeRolePolicyDocument: >
         {"Version":"2012-10-17","Statement":{"Effect":"Allow","Principal":{"Service":"codepipeline.amazonaws.com"},"Action":"sts:AssumeRole"}}
       ManagedPolicyArns:
-        - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/machine-deploy-s3'
         - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
         - 'arn:aws:iam::aws:policy/AWSCodeDeployFullAccess'
         - 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'
+        - !ImportValue CodePipelineArtifactBucketDeployPolicy
 
 # CodeBuild Stage
   DemoCodeBuild:
