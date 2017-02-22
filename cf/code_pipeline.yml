@@ -7,9 +7,15 @@ Parameters:
   GitHubOAuthToken:
     Type: String
     NoEcho: True
-  DeploymentGroupTagValue:
+  TestDeploymentGroup:
     Type: 'String'
-    Description: 'Tag value of instances tagged with "DeploymentGroup" to be targeted'
+    Description: 'Test Deployment Group Name'
+  ProdDeploymentGroup:
+    Type: 'String'
+    Description: 'Prod Deployment Group Name'
+  ApprovalNotificationArn:
+    Type: 'String'
+    Description: 'Notification ARN for Prod approvals'
 
 Resources:
   DemoPipeline:
@@ -52,15 +58,40 @@ Resources:
                 - Name: BuildProductArtifact
         - Name: Deploy
           Actions:
-            - Name: Deploy
+            - Name: Deploy to Test
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
                 Provider: CodeDeploy
                 Version: 1
               Configuration:
-                ApplicationName: !Ref DemoApplication
-                DeploymentGroupName: !Ref DemoDeploymentGroup
+                ApplicationName: !Ref DemoApplicationTest
+                DeploymentGroupName: !Ref DemoDeploymentGroupTest
+              InputArtifacts:
+                - Name: BuildProductArtifact
+              RunOrder: 1
+        - Name: Approve
+          Actions:
+            - Name: Approval
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              Configuration:
+                NotificationArn: !Ref ApprovalNotificationArn
+                CustomData: 'Look at this!'
+        - Name: Deploy
+          Actions:
+            - Name: Deploy to Prod
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CodeDeploy
+                Version: 1
+              Configuration:
+                ApplicationName: !Ref DemoApplicationProd
+                DeploymentGroupName: !Ref DemoDeploymentGroupProd
               InputArtifacts:
                 - Name: BuildProductArtifact
               RunOrder: 1
@@ -74,6 +105,7 @@ Resources:
         - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/machine-deploy-s3'
         - 'arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess'
         - 'arn:aws:iam::aws:policy/AWSCodeDeployFullAccess'
+        - 'arn:aws:iam::aws:policy/AmazonSNSFullAccess'
 
 # CodeBuild Stage
   DemoCodeBuild:
@@ -103,19 +135,33 @@ Resources:
         - 'arn:aws:iam::aws:policy/CloudWatchLogsFullAccess'
         - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/machine-deploy-s3'
 
-# CodeDeploy Stage
-  DemoApplication:
+# CodeDeploy Test Stage
+  DemoApplicationTest:
     Type: 'AWS::CodeDeploy::Application'
-  DemoDeploymentGroup:
+  DemoDeploymentGroupTest:
     Type: 'AWS::CodeDeploy::DeploymentGroup'
     Properties:
-      ApplicationName: !Ref DemoApplication
+      ApplicationName: !Ref DemoApplicationTest
       DeploymentConfigName: CodeDeployDefault.AllAtOnce
       Ec2TagFilters:
         - Type: KEY_AND_VALUE
           Key: DeploymentGroup
-          Value: !Ref DeploymentGroupTagValue
+          Value: !Ref TestDeploymentGroup
       ServiceRoleArn: !Sub '${DemoIAMRole.Arn}'
+      
+  DemoApplicationProd:
+    Type: 'AWS::CodeDeploy::Application'
+  DemoDeploymentGroupProd:
+    Type: 'AWS::CodeDeploy::DeploymentGroup'
+    Properties:
+      ApplicationName: !Ref DemoApplicationProd
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
+      Ec2TagFilters:
+        - Type: KEY_AND_VALUE
+          Key: DeploymentGroup
+          Value: !Ref ProdDeploymentGroup
+      ServiceRoleArn: !Sub '${DemoIAMRole.Arn}'
+      
   DemoIAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
