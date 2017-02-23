@@ -6,7 +6,7 @@ substitutions = dict(
     WELCOME="Welcome!",
     MESSAGE="Is that really how it works?",
     BUILD=os.environ.get("BUILD", "SNAPSHOT"),
-    THING=os.environ.get("THING", "NOTHING")
+    THING=os.environ.get("THING", "Isn't it great!")
     )
 
 with open("app/index.html") as f:
